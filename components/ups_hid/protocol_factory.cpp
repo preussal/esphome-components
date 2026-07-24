@@ -189,54 +189,12 @@ ProtocolFactory::create_by_name(const std::string& protocol_name, UpsHidComponen
         ESP_LOGE(FACTORY_TAG, "Cannot create protocol with null parent component");
         return nullptr;
     }
-    
-    ESP_LOGD(FACTORY_TAG, "Creating protocol by name: %s", protocol_name.c_str());
-    
-    // Search through all registered protocols to find one with matching name
-    auto& vendor_registry = get_vendor_registry();
-    for (const auto& vendor_pair : vendor_registry) {
-        for (const auto& info : vendor_pair.second) {
-            // Match protocol name (case-insensitive)
-            std::string info_name_lower = info.name;
-            std::string protocol_name_lower = protocol_name;
-            std::transform(info_name_lower.begin(), info_name_lower.end(), info_name_lower.begin(), ::tolower);
-            std::transform(protocol_name_lower.begin(), protocol_name_lower.end(), protocol_name_lower.begin(), ::tolower);
-            
-            if (info_name_lower.find(protocol_name_lower) != std::string::npos) {
-                ESP_LOGD(FACTORY_TAG, "Found matching protocol '%s' for name '%s'", 
-                         info.name.c_str(), protocol_name.c_str());
-                auto protocol = info.creator(parent);
-                if (protocol) {
-                    ESP_LOGI(FACTORY_TAG, "Successfully created protocol '%s' by name", 
-                             protocol->get_protocol_name().c_str());
-                    return protocol;
-                }
-            }
-        }
+
+    // KNALLHARTER BYPASS: Wir ignorieren jegliche fehlerhafte Listen-Registrierung
+    if (logger::global_logger != nullptr) {
+        ESP_LOGI(FACTORY_TAG, "!!!! HARD-BYPASS ACTIVE: Instantiating ApcHidProtocol directly !!!!");
     }
-    
-    // Search through fallback protocols
-    auto& fallback_registry = get_fallback_registry();
-    for (const auto& info : fallback_registry) {
-        std::string info_name_lower = info.name;
-        std::string protocol_name_lower = protocol_name;
-        std::transform(info_name_lower.begin(), info_name_lower.end(), info_name_lower.begin(), ::tolower);
-        std::transform(protocol_name_lower.begin(), protocol_name_lower.end(), protocol_name_lower.begin(), ::tolower);
-        
-        if (info_name_lower.find(protocol_name_lower) != std::string::npos) {
-            ESP_LOGD(FACTORY_TAG, "Found matching fallback protocol '%s' for name '%s'", 
-                     info.name.c_str(), protocol_name.c_str());
-            auto protocol = info.creator(parent);
-            if (protocol) {
-                ESP_LOGI(FACTORY_TAG, "Successfully created fallback protocol '%s' by name", 
-                         protocol->get_protocol_name().c_str());
-                return protocol;
-            }
-        }
-    }
-    
-    ESP_LOGE(FACTORY_TAG, "No protocol found with name containing '%s'", protocol_name.c_str());
-    return nullptr;
+    return std::make_unique<ApcHidProtocol>(parent);
 }
 
 } // namespace ups_hid
