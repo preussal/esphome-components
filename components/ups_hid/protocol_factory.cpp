@@ -2,6 +2,7 @@
 #include "ups_hid.h"
 #include "esphome/core/log.h"
 #include "esphome/components/logger/logger.h"
+#include "protocol_apc.h"
 #include <algorithm>
 
 namespace esphome {
